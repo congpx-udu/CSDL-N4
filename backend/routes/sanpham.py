@@ -50,7 +50,33 @@ def create_sanpham(sp: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 4. Xoá sản phẩm
+# 4. Cập nhật sản phẩm
+@router.put("/{masp}")
+def update_sanpham(masp: str, sp: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            sql = """
+                UPDATE SanPham 
+                SET TenSP = %s, MoTa = %s, LoaiSP = %s, GiaBan = %s, DonViTinh = %s, MaKho = %s
+                WHERE MaSP = %s
+            """
+            cursor.execute(sql, (
+                sp["TenSP"],
+                sp["MoTa"],
+                sp["LoaiSP"],
+                sp["GiaBan"],
+                sp["DonViTinh"],
+                sp["MaKho"],
+                masp
+            ))
+            conn.commit()
+        conn.close()
+        return {"message": "Cập nhật sản phẩm thành công"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 5. Xoá sản phẩm
 @router.delete("/{masp}")
 def delete_sanpham(masp: str):
     conn = get_connection()

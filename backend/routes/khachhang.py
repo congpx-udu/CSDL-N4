@@ -47,7 +47,30 @@ def create_khachhang(kh: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 4. Xoá khách hàng
+# 4. Cập nhật khách hàng
+@router.put("/{makh}")
+def update_khachhang(makh: str, kh: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            sql = """
+                UPDATE KhachHang 
+                SET TenKH = %s, DiaChi = %s, Email = %s
+                WHERE MaKH = %s
+            """
+            cursor.execute(sql, (
+                kh["TenKH"],
+                kh["DiaChi"],
+                kh["Email"],
+                makh
+            ))
+            conn.commit()
+        conn.close()
+        return {"message": "Cập nhật khách hàng thành công"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 5. Xoá khách hàng
 @router.delete("/{makh}")
 def delete_khachhang(makh: str):
     conn = get_connection()

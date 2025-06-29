@@ -48,7 +48,31 @@ def create_dondathang(don: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 4. Xoá đơn đặt hàng
+# 4. Cập nhật đơn đặt hàng
+@router.put("/{madon}")
+def update_dondathang(madon: str, don: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            sql = """
+                UPDATE DonDatHang 
+                SET TrangThai = %s, NgayDatHang = %s, TongTien = %s, MaKH = %s
+                WHERE MaDon = %s
+            """
+            cursor.execute(sql, (
+                don["TrangThai"],
+                don["NgayDatHang"],
+                don["TongTien"],
+                don["MaKH"],
+                madon
+            ))
+            conn.commit()
+        conn.close()
+        return {"message": "Cập nhật đơn đặt hàng thành công"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 5. Xoá đơn đặt hàng
 @router.delete("/{madon}")
 def delete_dondathang(madon: str):
     conn = get_connection()
