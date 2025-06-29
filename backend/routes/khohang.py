@@ -48,7 +48,31 @@ def create_khohang(kho: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 4. Xoá kho
+# 4. Cập nhật kho
+@router.put("/{makho}")
+def update_khohang(makho: str, kho: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            sql = """
+                UPDATE KhoHang 
+                SET TenKho = %s, NguoiQuanLy = %s, DiaChiKho = %s, SucChua = %s
+                WHERE MaKho = %s
+            """
+            cursor.execute(sql, (
+                kho["TenKho"],
+                kho["NguoiQuanLy"],
+                kho["DiaChiKho"],
+                kho["SucChua"],
+                makho
+            ))
+            conn.commit()
+        conn.close()
+        return {"message": "Cập nhật kho thành công"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 5. Xoá kho
 @router.delete("/{makho}")
 def delete_khohang(makho: str):
     conn = get_connection()

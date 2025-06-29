@@ -47,7 +47,30 @@ def create_ncc(ncc: dict):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 4. Xoá nhà cung cấp
+# 4. Cập nhật nhà cung cấp
+@router.put("/{mancc}")
+def update_ncc(mancc: str, ncc: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            sql = """
+                UPDATE NhaCungCap 
+                SET TenNCC = %s, DiaChi = %s, Email = %s
+                WHERE MaNCC = %s
+            """
+            cursor.execute(sql, (
+                ncc["TenNCC"],
+                ncc["DiaChi"],
+                ncc["Email"],
+                mancc
+            ))
+            conn.commit()
+        conn.close()
+        return {"message": "Cập nhật nhà cung cấp thành công"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# 5. Xoá nhà cung cấp
 @router.delete("/{mancc}")
 def delete_ncc(mancc: str):
     conn = get_connection()

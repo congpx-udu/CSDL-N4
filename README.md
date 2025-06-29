@@ -1,18 +1,22 @@
-CSDL-N4/
-backend/
-├── main.py # Chạy FastAPI app
-├── db.py # Kết nối MySQL
-├── routes/
-│ ├── **init**.py
-│ ├── sanpham.py # API bảng SanPham
-│ └── ... # Các bảng khác
+# Hệ Thống Quản Lý Kho Hàng - CSDL-N4
 
-├── frontend/ # React frontend (sẽ xây)
-│ ├── public/
-│ ├── src/
-│ │ ├── components/ # Các component chung
-│ │ ├── pages/ # Mỗi bảng là một page riêng
-│ │ └── App.jsx
-│ └── package.json
+## 🚀 Cài Đặt Nhanh
 
-├── README.md
+### Backend
+```bash
+cd backend
+pip install -r requirements.txt
+python main.py
+```
+
+### Frontend
+```bash
+cd frontend
+npm install
+npm start
+```
+
+
+
+
+
