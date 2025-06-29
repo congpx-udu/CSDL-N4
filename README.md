@@ -1,4 +1,4 @@
-project/
+CSDL-N4/
 backend/
 ├── main.py # Chạy FastAPI app
 ├── db.py # Kết nối MySQL
