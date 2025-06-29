@@ -7,15 +7,12 @@ backend/
 │ ├── sanpham.py # API bảng SanPham
 │ └── ... # Các bảng khác
 
-├── frontend/
-│ ├── public/ # Static files (favicon, index.html)
+├── frontend/ # React frontend (sẽ xây)
+│ ├── public/
 │ ├── src/
-│ │ ├── components/ # Các component dùng lại
-│ │ ├── pages/ # Các trang chính (Home, CRUD...)
-│ │ ├── services/ # API services kết nối FastAPI
-│ │ ├── App.jsx # Thành phần gốc React
-│ │ └── main.jsx # Điểm bắt đầu frontend
-│ ├── package.json # Thông tin project React
-│ └── vite.config.js # Cấu hình Vite hoặc Webpack
+│ │ ├── components/ # Các component chung
+│ │ ├── pages/ # Mỗi bảng là một page riêng
+│ │ └── App.jsx
+│ └── package.json
 
 ├── README.md
