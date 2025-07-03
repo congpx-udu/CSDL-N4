@@ -32,14 +32,15 @@ def create_phieunhap(pn: dict):
         conn = get_connection()
         with conn.cursor() as cursor:
             sql = """
-                INSERT INTO PhieuNhap (MaPN, NgayNhap, TongTien, MaKho)
-                VALUES (%s, %s, %s, %s)
+                INSERT INTO PhieuNhap (MaPN, NgayNhap, TongTien, MaKho, MaNCC)
+                VALUES (%s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (
                 pn["MaPN"],
                 pn["NgayNhap"],
                 pn["TongTien"],
-                pn["MaKho"]
+                pn["MaKho"],
+                pn["MaNCC"]
             ))
             conn.commit()
         conn.close()

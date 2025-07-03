@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from db import get_connection
 
-router = APIRouter(prefix="/khachhang-sdt", tags=["KhachHang_SoDienThoai"])
+router = APIRouter(prefix="/khachhang_sdt", tags=["KhachHang_SoDienThoai"])
 
 @router.get("/")
 def get_all_sdt():

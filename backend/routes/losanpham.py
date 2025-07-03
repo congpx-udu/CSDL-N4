@@ -32,15 +32,16 @@ def create_losanpham(lo: dict):
         conn = get_connection()
         with conn.cursor() as cursor:
             sql = """
-                INSERT INTO LoSanPham (MaLo, NgaySanXuat, HanSuDung, SoLuong, MaPN)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO LoSanPham (MaLo, NgaySanXuat, HanSuDung, SoLuong, MaPN, MaNCC)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """
             cursor.execute(sql, (
                 lo["MaLo"],
                 lo["NgaySanXuat"],
                 lo["HanSuDung"],
                 lo["SoLuong"],
-                lo["MaPN"]
+                lo["MaPN"],
+                lo["MaNCC"]
             ))
             conn.commit()
         conn.close()

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from db import get_connection
 
-router = APIRouter(prefix="/nhacungcap-sdt", tags=["NhaCungCap_SoDienThoai"])
+router = APIRouter(prefix="/nhacungcap_sdt", tags=["NhaCungCap_SoDienThoai"])
 
 # Lấy tất cả số điện thoại của tất cả nhà cung cấp
 @router.get("/")
