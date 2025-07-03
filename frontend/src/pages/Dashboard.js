@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { khoHangAPI, sanPhamAPI, khachHangAPI, donHangAPI } from '../services/api';
 
-const Dashboard = () => {
+const Dashboard = ({ onNavigate }) => {
   const [stats, setStats] = useState({
     khohang: 0,
     sanpham: 0,
@@ -33,26 +33,29 @@ const Dashboard = () => {
     loadStats();
   }, []);
 
+  const cards = [
+    { label: 'Kho hàng', value: stats.khohang, tab: 'khohang' },
+    { label: 'Sản phẩm', value: stats.sanpham, tab: 'sanpham' },
+    { label: 'Khách hàng', value: stats.khachhang, tab: 'khachhang' },
+    { label: 'Đơn hàng', value: stats.dondathang, tab: 'dondathang' }
+  ];
+
   return (
     <div className="content">
-      <h2>Dashboard</h2>
-      <div className="stats">
-        <div className="stat-card">
-          <h3>{stats.khohang}</h3>
-          <p>Kho hàng</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.sanpham}</h3>
-          <p>Sản phẩm</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.khachhang}</h3>
-          <p>Khách hàng</p>
-        </div>
-        <div className="stat-card">
-          <h3>{stats.dondathang}</h3>
-          <p>Đơn hàng</p>
-        </div>
+      <h2 style={{marginBottom: 32}}>Trang chủ</h2>
+      <div className="dashboard-grid">
+        {cards.map((card) => (
+          <div
+            className="dashboard-card"
+            key={card.label}
+            onClick={() => onNavigate(card.tab)}
+            tabIndex={0}
+            style={{cursor: 'pointer'}}
+          >
+            <div className="dashboard-value">{card.value}</div>
+            <div className="dashboard-label">{card.label}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
