@@ -3,11 +3,13 @@ import { khachHangAPI, caNhanAPI, doanhNghiepAPI, khachHangSDTAPI, chonAPI, sanP
 
 const KhachHangPage = () => {
   const [khachhang, setKhachhang] = useState([]);
+  const [filteredKhachhang, setFilteredKhachhang] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedKH, setSelectedKH] = useState(null);
   const [editingKH, setEditingKH] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [detailData, setDetailData] = useState({
     caNhan: null,
     doanhNghiep: null,
@@ -31,11 +33,29 @@ const KhachHangPage = () => {
       setLoading(true);
       const data = await khachHangAPI.getAll();
       setKhachhang(data);
+      setFilteredKhachhang(data);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm lọc theo MaKH (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredKhachhang(khachhang);
+    } else {
+      const filtered = khachhang.filter(kh => 
+        kh.MaKH.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredKhachhang(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredKhachhang(khachhang);
   };
 
   const loadDetailData = async (maKH) => {
@@ -140,6 +160,51 @@ const KhachHangPage = () => {
     <div className="content">
       <h2>Quản lý Khách hàng</h2>
       
+      {/* Input lọc theo MaKH */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã khách hàng (MaKH) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+      
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
           + Thêm khách hàng mới
@@ -209,7 +274,7 @@ const KhachHangPage = () => {
             </tr>
           </thead>
           <tbody>
-            {khachhang.map((kh) => (
+            {filteredKhachhang.map((kh) => (
               <tr key={kh.MaKH}>
                 <td>{kh.MaKH}</td>
                 <td>{kh.TenKH}</td>

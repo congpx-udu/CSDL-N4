@@ -3,9 +3,11 @@ import { phieuNhapAPI, nhaCungCapAPI } from '../services/api';
 
 const PhieuNhapPage = () => {
   const [phieunhap, setPhieuNhap] = useState([]);
+  const [filteredPhieunhap, setFilteredPhieunhap] = useState([]);
   const [nhacungcap, setNhaCungCap] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     MaPN: '',
     NgayNhap: '',
@@ -26,12 +28,30 @@ const PhieuNhapPage = () => {
         nhaCungCapAPI.getAll()
       ]);
       setPhieuNhap(pnData);
+      setFilteredPhieunhap(pnData);
       setNhaCungCap(nccData);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm lọc theo MaPN (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredPhieunhap(phieunhap);
+    } else {
+      const filtered = phieunhap.filter(pn => 
+        pn.MaPN.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredPhieunhap(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredPhieunhap(phieunhap);
   };
 
   const handleSubmit = async (e) => {
@@ -65,9 +85,55 @@ const PhieuNhapPage = () => {
       [e.target.name]: e.target.value
     });
   };
+
   return (
     <div className="content">
       <h2>Quản lý Phiếu Nhập</h2>
+      
+      {/* Input lọc theo MaPN */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã phiếu nhập (MaPN) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
       
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
@@ -146,7 +212,7 @@ const PhieuNhapPage = () => {
         <table className="data-table">
           <thead>
             <tr>
-              <th>Mã PN</th>
+              <th>Mã phiếu nhập</th>
               <th>Ngày nhập</th>
               <th>Tổng tiền</th>
               <th>Mã kho</th>
@@ -155,7 +221,7 @@ const PhieuNhapPage = () => {
             </tr>
           </thead>
           <tbody>
-            {phieunhap.map((pn) => (
+            {filteredPhieunhap.map((pn) => (
               <tr key={pn.MaPN}>
                 <td>{pn.MaPN}</td>
                 <td>{pn.NgayNhap}</td>

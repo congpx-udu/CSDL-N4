@@ -3,9 +3,11 @@ import { phieuXuatAPI, khoHangAPI } from '../services/api';
 
 const PhieuXuatPage = () => {
   const [phieuxuat, setPhieuXuat] = useState([]);
+  const [filteredPhieuxuat, setFilteredPhieuxuat] = useState([]);
   const [khoList, setKhoList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     MaPX: '',
     NgayXuat: '',
@@ -25,12 +27,30 @@ const PhieuXuatPage = () => {
         khoHangAPI.getAll()
       ]);
       setPhieuXuat(pxData);
+      setFilteredPhieuxuat(pxData);
       setKhoList(khoData);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm lọc theo MaPX (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredPhieuxuat(phieuxuat);
+    } else {
+      const filtered = phieuxuat.filter(px => 
+        px.MaPX.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredPhieuxuat(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredPhieuxuat(phieuxuat);
   };
 
   const handleSubmit = async (e) => {
@@ -68,6 +88,52 @@ const PhieuXuatPage = () => {
   return (
     <div className="content">
       <h2>Quản lý Phiếu Xuất</h2>
+      
+      {/* Input lọc theo MaPX */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã phiếu xuất (MaPX) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+      
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
           + Thêm phiếu xuất mới
@@ -126,13 +192,14 @@ const PhieuXuatPage = () => {
           </div>
         </form>
       )}
+      
       {loading ? (
         <p className="loading">Đang tải dữ liệu...</p>
       ) : (
         <table className="data-table">
           <thead>
             <tr>
-              <th>Mã PX</th>
+              <th>Mã phiếu xuất</th>
               <th>Ngày xuất</th>
               <th>Tổng tiền</th>
               <th>Mã kho</th>
@@ -140,7 +207,7 @@ const PhieuXuatPage = () => {
             </tr>
           </thead>
           <tbody>
-            {phieuxuat.map((px) => (
+            {filteredPhieuxuat.map((px) => (
               <tr key={px.MaPX}>
                 <td>{px.MaPX}</td>
                 <td>{px.NgayXuat}</td>

@@ -3,12 +3,14 @@ import { donHangAPI, thuocVeAPI, khachHangAPI } from '../services/api';
 
 const DonHangPage = () => {
   const [dondathang, setDonDatHang] = useState([]);
+  const [filteredDondathang, setFilteredDondathang] = useState([]);
   const [khachhang, setKhachHang] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedDon, setSelectedDon] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [detailData, setDetailData] = useState({
     thuocVe: []
   });
@@ -32,12 +34,30 @@ const DonHangPage = () => {
         khachHangAPI.getAll()
       ]);
       setDonDatHang(donData);
+      setFilteredDondathang(donData);
       setKhachHang(khData);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm lọc theo MaDon (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredDondathang(dondathang);
+    } else {
+      const filtered = dondathang.filter(don => 
+        don.MaDon.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredDondathang(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredDondathang(dondathang);
   };
 
   const loadDetailData = async (maDon) => {
@@ -126,6 +146,51 @@ const DonHangPage = () => {
   return (
     <div className="content">
       <h2>Quản lý Đơn Hàng</h2>
+      
+      {/* Input lọc theo MaDon */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã đơn hàng (MaDon) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
       
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
@@ -222,7 +287,7 @@ const DonHangPage = () => {
             </tr>
           </thead>
           <tbody>
-            {dondathang.map((don) => (
+            {filteredDondathang.map((don) => (
               <tr key={don.MaDon}>
                 <td>{don.MaDon}</td>
                 <td>{don.TrangThai}</td>
@@ -271,31 +336,31 @@ const DonHangPage = () => {
                 <p><strong>Mã khách hàng:</strong> {selectedDon.MaKH}</p>
               </div>
 
-              <div className="detail-section">
-                <h4>Sản phẩm trong đơn (Thuộc Về)</h4>
-                {detailData.thuocVe.length > 0 ? (
-                  <table className="data-table">
+              {detailData.thuocVe.length > 0 && (
+                <div className="detail-section">
+                  <h4>Chi tiết sản phẩm</h4>
+                  <table className="detail-table">
                     <thead>
                       <tr>
-                        <th>Mã SP</th>
-                        <th>Mã PX</th>
+                        <th>Mã sản phẩm</th>
                         <th>Số lượng</th>
+                        <th>Đơn giá</th>
+                        <th>Thành tiền</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {detailData.thuocVe.map((tv, index) => (
+                      {detailData.thuocVe.map((item, index) => (
                         <tr key={index}>
-                          <td>{tv.MaSP}</td>
-                          <td>{tv.MaPX}</td>
-                          <td>{tv.SoLuongSanPham}</td>
+                          <td>{item.MaSP}</td>
+                          <td>{item.SoLuong}</td>
+                          <td>{item.DonGia?.toLocaleString()}đ</td>
+                          <td>{item.ThanhTien?.toLocaleString()}đ</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                ) : (
-                  <p>Chưa có sản phẩm nào trong đơn hàng này</p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

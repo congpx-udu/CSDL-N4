@@ -3,11 +3,13 @@ import { nhaCungCapAPI, nhaCungCapSDTAPI } from '../services/api';
 
 const NhaCungCapPage = () => {
   const [nhacungcap, setNhaCungCap] = useState([]);
+  const [filteredNhacungcap, setFilteredNhacungcap] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedNCC, setSelectedNCC] = useState(null);
   const [editingNCC, setEditingNCC] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [detailData, setDetailData] = useState({
     soDienThoai: []
   });
@@ -27,11 +29,29 @@ const NhaCungCapPage = () => {
       setLoading(true);
       const data = await nhaCungCapAPI.getAll();
       setNhaCungCap(data);
+      setFilteredNhacungcap(data);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Hàm lọc theo MaNCC (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredNhacungcap(nhacungcap);
+    } else {
+      const filtered = nhacungcap.filter(ncc => 
+        ncc.MaNCC.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredNhacungcap(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredNhacungcap(nhacungcap);
   };
 
   const loadDetailData = async (maNCC) => {
@@ -113,6 +133,51 @@ const NhaCungCapPage = () => {
     <div className="content">
       <h2>Quản lý Nhà Cung Cấp</h2>
       
+      {/* Input lọc theo MaNCC */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã nhà cung cấp (MaNCC) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
+      
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
           + Thêm nhà cung cấp mới
@@ -186,7 +251,7 @@ const NhaCungCapPage = () => {
             </tr>
           </thead>
           <tbody>
-            {nhacungcap.map((ncc) => (
+            {filteredNhacungcap.map((ncc) => (
               <tr key={ncc.MaNCC}>
                 <td>{ncc.MaNCC}</td>
                 <td>{ncc.TenNCC}</td>
@@ -225,9 +290,9 @@ const NhaCungCapPage = () => {
             </div>
             <div className="modal-body">
               <div className="detail-section">
-                <h4>Thông tin cơ bản</h4>
+                <h4>Thông tin nhà cung cấp</h4>
                 <p><strong>Mã NCC:</strong> {selectedNCC.MaNCC}</p>
-                <p><strong>Tên:</strong> {selectedNCC.TenNCC}</p>
+                <p><strong>Tên NCC:</strong> {selectedNCC.TenNCC}</p>
                 <p><strong>Địa chỉ:</strong> {selectedNCC.DiaChi}</p>
                 <p><strong>Email:</strong> {selectedNCC.Email}</p>
               </div>
