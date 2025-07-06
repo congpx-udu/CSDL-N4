@@ -3,11 +3,13 @@ import { sanPhamAPI, khoHangAPI } from '../services/api';
 
 const SanPhamPage = () => {
   const [sanpham, setSanpham] = useState([]);
+  const [filteredSanpham, setFilteredSanpham] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedSP, setSelectedSP] = useState(null);
   const [editingSP, setEditingSP] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [formData, setFormData] = useState({
     MaSP: '',
     TenSP: '',
@@ -29,6 +31,7 @@ const SanPhamPage = () => {
       setLoading(true);
       const data = await sanPhamAPI.getAll();
       setSanpham(data);
+      setFilteredSanpham(data);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
@@ -43,6 +46,23 @@ const SanPhamPage = () => {
     } catch (error) {
       console.error('Error loading kho hang:', error);
     }
+  };
+
+  // Hàm lọc theo MaSP (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredSanpham(sanpham);
+    } else {
+      const filtered = sanpham.filter(sp => 
+        sp.MaSP.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredSanpham(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredSanpham(sanpham);
   };
 
   const handleViewDetail = (sp) => {
@@ -124,6 +144,51 @@ const SanPhamPage = () => {
   return (
     <div className="content">
       <h2>Quản lý Sản phẩm</h2>
+      
+      {/* Input lọc theo MaSP */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã sản phẩm (MaSP) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
       
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
@@ -240,7 +305,7 @@ const SanPhamPage = () => {
             </tr>
           </thead>
           <tbody>
-            {sanpham.map((sp) => (
+            {filteredSanpham.map((sp) => (
               <tr key={sp.MaSP}>
                 <td>{sp.MaSP}</td>
                 <td>{sp.TenSP}</td>

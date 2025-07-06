@@ -3,10 +3,12 @@ import { loSanPhamAPI, tiepNhanAPI, sanPhamAPI, nhaCungCapAPI } from '../service
 
 const LoSanPhamPage = () => {
   const [losanpham, setLoSanPham] = useState([]);
+  const [filteredLosanpham, setFilteredLosanpham] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
   const [selectedLo, setSelectedLo] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const [detailData, setDetailData] = useState({
     sanPhamsInLo: []
   });
@@ -30,6 +32,7 @@ const LoSanPhamPage = () => {
       setLoading(true);
       const data = await loSanPhamAPI.getAll();
       setLoSanPham(data);
+      setFilteredLosanpham(data);
     } catch (error) {
       alert('Lỗi kết nối API');
     } finally {
@@ -44,6 +47,23 @@ const LoSanPhamPage = () => {
     } catch (error) {
       setNhaCungCapList([]);
     }
+  };
+
+  // Hàm lọc theo MaLo (khóa chính)
+  const handleSearch = () => {
+    if (!searchTerm.trim()) {
+      setFilteredLosanpham(losanpham);
+    } else {
+      const filtered = losanpham.filter(lo => 
+        lo.MaLo.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredLosanpham(filtered);
+    }
+  };
+
+  const handleClear = () => {
+    setSearchTerm('');
+    setFilteredLosanpham(losanpham);
   };
 
   const loadDetailData = async (maLo) => {
@@ -112,6 +132,51 @@ const LoSanPhamPage = () => {
   return (
     <div className="content">
       <h2>Quản lý Lô Sản Phẩm</h2>
+      
+      {/* Input lọc theo MaLo */}
+      <div style={{ marginBottom: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder="Nhập mã lô (MaLo) để tìm..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ 
+              flex: 1, 
+              padding: '10px', 
+              border: '1px solid #ddd', 
+              borderRadius: '4px',
+              fontSize: '14px'
+            }}
+          />
+          <button 
+            onClick={handleSearch}
+            style={{
+              padding: '10px 20px',
+              background: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Tìm kiếm
+          </button>
+          <button 
+            onClick={handleClear}
+            style={{
+              padding: '10px 20px',
+              background: '#6c757d',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Xóa
+          </button>
+        </div>
+      </div>
       
       {!showForm ? (
         <button className="btn-add" onClick={() => setShowForm(true)}>
@@ -199,16 +264,16 @@ const LoSanPhamPage = () => {
           <thead>
             <tr>
               <th>Mã lô</th>
-              <th>Ngày SX</th>
-              <th>Hạn SD</th>
+              <th>Ngày sản xuất</th>
+              <th>Hạn sử dụng</th>
               <th>Số lượng</th>
-              <th>Mã PN</th>
+              <th>Mã phiếu nhập</th>
               <th>Mã NCC</th>
               <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
-            {losanpham.map((lo) => (
+            {filteredLosanpham.map((lo) => (
               <tr key={lo.MaLo}>
                 <td>{lo.MaLo}</td>
                 <td>{lo.NgaySanXuat}</td>
@@ -243,24 +308,25 @@ const LoSanPhamPage = () => {
             </div>
             <div className="modal-body">
               <div className="detail-section">
-                <h4>Thông tin lô</h4>
+                <h4>Thông tin lô sản phẩm</h4>
                 <p><strong>Mã lô:</strong> {selectedLo.MaLo}</p>
                 <p><strong>Ngày sản xuất:</strong> {selectedLo.NgaySanXuat}</p>
                 <p><strong>Hạn sử dụng:</strong> {selectedLo.HanSuDung}</p>
                 <p><strong>Số lượng:</strong> {selectedLo.SoLuong}</p>
                 <p><strong>Mã phiếu nhập:</strong> {selectedLo.MaPN}</p>
+                <p><strong>Mã nhà cung cấp:</strong> {selectedLo.MaNCC}</p>
               </div>
 
-              <div className="detail-section">
-                <h4>Sản phẩm trong lô (Tiếp Nhận)</h4>
-                {detailData.sanPhamsInLo.length > 0 ? (
-                  <table className="data-table">
+              {detailData.sanPhamsInLo.length > 0 && (
+                <div className="detail-section">
+                  <h4>Sản phẩm trong lô ({detailData.sanPhamsInLo.length})</h4>
+                  <table className="detail-table">
                     <thead>
                       <tr>
-                        <th>Mã SP</th>
-                        <th>Tên Sản Phẩm</th>
-                        <th>Đơn Vị Tính</th>
-                        <th>Mô Tả</th>
+                        <th>Mã sản phẩm</th>
+                        <th>Tên sản phẩm</th>
+                        <th>Mô tả</th>
+                        <th>Giá</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -268,16 +334,14 @@ const LoSanPhamPage = () => {
                         <tr key={index}>
                           <td>{sp.MaSP}</td>
                           <td>{sp.TenSP}</td>
-                          <td>{sp.DonViTinh}</td>
                           <td>{sp.MoTa}</td>
+                          <td>{sp.Gia?.toLocaleString()}đ</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                ) : (
-                  <p>Chưa có sản phẩm nào trong lô này</p>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
