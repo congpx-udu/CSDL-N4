@@ -19,6 +19,7 @@ const NhaCungCapPage = () => {
     DiaChi: '',
     Email: ''
   });
+  const [phoneForm, setPhoneForm] = useState({ SoDienThoai: '', editingIndex: null });
 
   useEffect(() => {
     loadData();
@@ -127,6 +128,53 @@ const NhaCungCapPage = () => {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handlePhoneInputChange = (e) => {
+    setPhoneForm({ ...phoneForm, SoDienThoai: e.target.value });
+  };
+
+  const isValidPhoneNumber = (phone) => {
+    return /^0\d{9,10}$/.test(phone);
+  };
+
+  const handleAddOrEditPhone = async () => {
+    if (!phoneForm.SoDienThoai.trim()) return;
+    if (!isValidPhoneNumber(phoneForm.SoDienThoai)) {
+      alert('Vui lòng nhập đúng số điện thoại');
+      return;
+    }
+    try {
+      if (phoneForm.editingIndex !== null) {
+        // Sửa số điện thoại: xóa số cũ, thêm số mới
+        const oldSDT = detailData.soDienThoai[phoneForm.editingIndex];
+        await nhaCungCapSDTAPI.delete(`${selectedNCC.MaNCC}/${oldSDT.SoDienThoai}`);
+        await nhaCungCapSDTAPI.create({ MaNCC: selectedNCC.MaNCC, SoDienThoai: phoneForm.SoDienThoai });
+      } else {
+        // Thêm mới
+        await nhaCungCapSDTAPI.create({ MaNCC: selectedNCC.MaNCC, SoDienThoai: phoneForm.SoDienThoai });
+      }
+      setPhoneForm({ SoDienThoai: '', editingIndex: null });
+      await loadDetailData(selectedNCC.MaNCC);
+    } catch (error) {
+      alert('Lỗi khi thêm/sửa số điện thoại');
+    }
+  };
+
+  const handleEditPhone = (index) => {
+    setPhoneForm({ SoDienThoai: detailData.soDienThoai[index].SoDienThoai, editingIndex: index });
+  };
+
+  const handleDeletePhone = async (index) => {
+    if (!window.confirm('Bạn có chắc muốn xóa số điện thoại này?')) return;
+    try {
+      const sdt = detailData.soDienThoai[index];
+      await nhaCungCapSDTAPI.delete(`${selectedNCC.MaNCC}/${sdt.SoDienThoai}`);
+      await loadDetailData(selectedNCC.MaNCC);
+      if (phoneForm.editingIndex === index) setPhoneForm({ SoDienThoai: '', editingIndex: null });
+    } catch (error) {
+      alert('Lỗi khi xóa số điện thoại');
+    }
   };
 
   return (
@@ -302,11 +350,33 @@ const NhaCungCapPage = () => {
                   <h4>Số điện thoại ({detailData.soDienThoai.length})</h4>
                   <ul>
                     {detailData.soDienThoai.map((sdt, index) => (
-                      <li key={index}>{sdt.SoDienThoai}</li>
+                      <li key={index} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {sdt.SoDienThoai}
+                        <button style={{marginLeft: 8}} onClick={() => handleEditPhone(index)}>Sửa</button>
+                        <button style={{marginLeft: 4}} onClick={() => handleDeletePhone(index)}>Xóa</button>
+                      </li>
                     ))}
                   </ul>
                 </div>
               )}
+              <div className="detail-section">
+                <h4>{phoneForm.editingIndex !== null ? 'Sửa số điện thoại' : 'Thêm số điện thoại mới'}</h4>
+                <input
+                  type="tel"
+                  value={phoneForm.SoDienThoai}
+                  onChange={handlePhoneInputChange}
+                  placeholder="Nhập số điện thoại"
+                  style={{ padding: '6px', borderRadius: '4px', border: '1px solid #ccc', marginRight: 8 }}
+                />
+                <button onClick={handleAddOrEditPhone} style={{ padding: '6px 16px' }}>
+                  {phoneForm.editingIndex !== null ? 'Cập nhật' : 'Thêm'}
+                </button>
+                {phoneForm.editingIndex !== null && (
+                  <button onClick={() => setPhoneForm({ SoDienThoai: '', editingIndex: null })} style={{ marginLeft: 8 }}>
+                    Hủy
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

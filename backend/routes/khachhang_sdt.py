@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from db import get_connection
+import re
 
 router = APIRouter(prefix="/khachhang_sdt", tags=["KhachHang_SoDienThoai"])
 
@@ -23,6 +24,9 @@ def get_sdt_by_kh(makh: str):
 
 @router.post("/")
 def create_sdt(data: dict):
+    phone = data.get("SoDienThoai", "")
+    if not re.fullmatch(r"0\d{9,10}", phone):
+        raise HTTPException(status_code=400, detail="Số điện thoại phải bắt đầu bằng 0, chỉ chứa số và có 10 hoặc 11 chữ số!")
     try:
         conn = get_connection()
         with conn.cursor() as cursor:
