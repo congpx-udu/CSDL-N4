@@ -24,6 +24,10 @@ const KhachHangPage = () => {
     Email: ''
   });
   const [phoneForm, setPhoneForm] = useState({ SoDienThoai: '', editingIndex: null });
+  const [editDetailMode, setEditDetailMode] = useState(null); // 'caNhan' | 'doanhNghiep' | null
+  const [addDetailMode, setAddDetailMode] = useState(null); // 'caNhan' | 'doanhNghiep' | null
+  const [tempCaNhan, setTempCaNhan] = useState({ MaCaNhan: '', Ten: '' });
+  const [tempDoanhNghiep, setTempDoanhNghiep] = useState({ MaDoanhNghiep: '', LoaiHinhKinhDoanh: '', Ten: '', QuyMo: '' });
 
   useEffect(() => {
     loadData();
@@ -104,7 +108,7 @@ const KhachHangPage = () => {
     setShowDetail(true);
   };
 
-  const handleEdit = (kh) => {
+  const handleEdit = async (kh) => {
     setEditingKH(kh);
     setFormData({
       MaKH: kh.MaKH,
@@ -112,6 +116,26 @@ const KhachHangPage = () => {
       DiaChi: kh.DiaChi,
       Email: kh.Email
     });
+    await loadDetailData(kh.MaKH);
+    if (detailData.caNhan) {
+      setEditDetailMode('caNhan');
+      setTempCaNhan({
+        MaCaNhan: detailData.caNhan.MaCaNhan || '',
+        Ten: detailData.caNhan.Ten || ''
+      });
+    } else if (detailData.doanhNghiep) {
+      setEditDetailMode('doanhNghiep');
+      setTempDoanhNghiep({
+        MaDoanhNghiep: detailData.doanhNghiep.MaDoanhNghiep || '',
+        LoaiHinhKinhDoanh: detailData.doanhNghiep.LoaiHinhKinhDoanh || '',
+        Ten: detailData.doanhNghiep.Ten || '',
+        QuyMo: detailData.doanhNghiep.QuyMo || ''
+      });
+    } else {
+      setEditDetailMode(null);
+      setTempCaNhan({ MaCaNhan: '', Ten: '' });
+      setTempDoanhNghiep({ MaDoanhNghiep: '', LoaiHinhKinhDoanh: '', Ten: '', QuyMo: '' });
+    }
     setShowForm(true);
   };
 
@@ -119,6 +143,16 @@ const KhachHangPage = () => {
     e.preventDefault();
     try {
       if (editingKH) {
+        // Kiểm tra thay đổi
+        const isChanged = (
+          formData.TenKH !== editingKH.TenKH ||
+          formData.DiaChi !== editingKH.DiaChi ||
+          formData.Email !== editingKH.Email
+        );
+        if (!isChanged) {
+          alert('Bạn chưa thay đổi thông tin nào!');
+          return;
+        }
         await khachHangAPI.update(editingKH.MaKH, formData);
         alert('Cập nhật khách hàng thành công!');
       } else {
@@ -149,6 +183,22 @@ const KhachHangPage = () => {
       } catch (error) {
         alert('Lỗi khi xóa');
       }
+    }
+  };
+
+  const handleDeleteDetail = async (type) => {
+    if (!selectedKH) return;
+    if (!window.confirm('Bạn có chắc muốn xóa thông tin chi tiết này?')) return;
+    try {
+      if (type === 'caNhan') {
+        await caNhanAPI.delete(selectedKH.MaKH);
+      } else {
+        await doanhNghiepAPI.delete(selectedKH.MaKH);
+      }
+      await loadDetailData(selectedKH.MaKH);
+      alert('Đã xóa thông tin chi tiết!');
+    } catch (error) {
+      alert('Lỗi khi xóa thông tin chi tiết!');
     }
   };
 
@@ -253,11 +303,7 @@ const KhachHangPage = () => {
         </div>
       </div>
       
-      {!showForm ? (
-        <button className="btn-add" onClick={() => setShowForm(true)}>
-          + Thêm khách hàng mới
-        </button>
-      ) : (
+      {showForm ? (
         <form onSubmit={handleSubmit} className="form">
           <h3>{editingKH ? 'Chỉnh sửa khách hàng' : 'Thêm khách hàng mới'}</h3>
           <div className="form-group">
@@ -306,6 +352,10 @@ const KhachHangPage = () => {
             </button>
           </div>
         </form>
+      ) : (
+        <button className="btn-add" onClick={() => setShowForm(true)}>
+          + Thêm khách hàng mới
+        </button>
       )}
 
       {loading ? (
@@ -367,8 +417,8 @@ const KhachHangPage = () => {
                 <p><strong>Địa chỉ:</strong> {selectedKH.DiaChi}</p>
                 <p><strong>Email:</strong> {selectedKH.Email}</p>
               </div>
-
-              {detailData.caNhan ? (
+              {/* Nếu có cá nhân */}
+              {detailData.caNhan && !editDetailMode && (
                 <div className="detail-section">
                   <h4>Thông tin cá nhân</h4>
                   <table className="detail-table">
@@ -387,23 +437,32 @@ const KhachHangPage = () => {
                       </tr>
                     </tbody>
                   </table>
-                </div>
-              ) : null}
-
-              {!detailData.caNhan && !detailData.doanhNghiep && (
-                <div className="detail-section">
-                  <h4>Thông tin chi tiết</h4>
-                  <p style={{ color: '#666', fontStyle: 'italic' }}>
-                    Khách hàng này chưa có thông tin chi tiết (cá nhân hoặc doanh nghiệp)
-                  </p>
-                  <p style={{ color: '#999', fontSize: '12px' }}>
-                    Debug: CaNhan = {detailData.caNhan ? 'Có dữ liệu' : 'Không có dữ liệu'}, 
-                    DoanhNghiep = {detailData.doanhNghiep ? 'Có dữ liệu' : 'Không có dữ liệu'}
-                  </p>
+                  <button onClick={() => { setEditDetailMode('caNhan'); setTempCaNhan({ MaCaNhan: detailData.caNhan.MaCaNhan, Ten: detailData.caNhan.Ten }); }}>Sửa</button>
+                  <button onClick={() => handleDeleteDetail('caNhan')}>Xóa</button>
+                  <button onClick={async () => {
+                    if (window.confirm('Chuyển sang doanh nghiệp? Thao tác này sẽ xóa thông tin cá nhân!')) {
+                      await handleDeleteDetail('caNhan');
+                      setAddDetailMode('doanhNghiep');
+                    }
+                  }}>Chuyển sang doanh nghiệp</button>
                 </div>
               )}
-
-              {detailData.doanhNghiep ? (
+              {/* Nếu đang sửa cá nhân */}
+              {editDetailMode === 'caNhan' && (
+                <div className="detail-section">
+                  <h4>Sửa thông tin cá nhân</h4>
+                  <input type="text" placeholder="Mã cá nhân" value={tempCaNhan.MaCaNhan} onChange={e => setTempCaNhan({ ...tempCaNhan, MaCaNhan: e.target.value })} />
+                  <input type="text" placeholder="Tên cá nhân" value={tempCaNhan.Ten} onChange={e => setTempCaNhan({ ...tempCaNhan, Ten: e.target.value })} />
+                  <button onClick={async () => {
+                    await caNhanAPI.update(selectedKH.MaKH, { ...tempCaNhan, MaKH: selectedKH.MaKH });
+                    await loadDetailData(selectedKH.MaKH);
+                    setEditDetailMode(null);
+                  }}>Lưu</button>
+                  <button onClick={() => setEditDetailMode(null)}>Hủy</button>
+                </div>
+              )}
+              {/* Nếu có doanh nghiệp */}
+              {detailData.doanhNghiep && !editDetailMode && (
                 <div className="detail-section">
                   <h4>Thông tin doanh nghiệp</h4>
                   <table className="detail-table">
@@ -430,8 +489,77 @@ const KhachHangPage = () => {
                       </tr>
                     </tbody>
                   </table>
+                  <button onClick={() => { setEditDetailMode('doanhNghiep'); setTempDoanhNghiep({
+                    MaDoanhNghiep: detailData.doanhNghiep.MaDoanhNghiep,
+                    LoaiHinhKinhDoanh: detailData.doanhNghiep.LoaiHinhKinhDoanh,
+                    Ten: detailData.doanhNghiep.Ten,
+                    QuyMo: detailData.doanhNghiep.QuyMo
+                  }); }}>Sửa</button>
+                  <button onClick={() => handleDeleteDetail('doanhNghiep')}>Xóa</button>
+                  <button onClick={async () => {
+                    if (window.confirm('Chuyển sang cá nhân? Thao tác này sẽ xóa thông tin doanh nghiệp!')) {
+                      await handleDeleteDetail('doanhNghiep');
+                      setAddDetailMode('caNhan');
+                    }
+                  }}>Chuyển sang cá nhân</button>
                 </div>
-              ) : null}
+              )}
+              {/* Nếu đang sửa doanh nghiệp */}
+              {editDetailMode === 'doanhNghiep' && (
+                <div className="detail-section">
+                  <h4>Sửa thông tin doanh nghiệp</h4>
+                  <input type="text" placeholder="Mã doanh nghiệp" value={tempDoanhNghiep.MaDoanhNghiep} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, MaDoanhNghiep: e.target.value })} />
+                  <input type="text" placeholder="Loại hình kinh doanh" value={tempDoanhNghiep.LoaiHinhKinhDoanh} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, LoaiHinhKinhDoanh: e.target.value })} />
+                  <input type="text" placeholder="Tên doanh nghiệp" value={tempDoanhNghiep.Ten} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, Ten: e.target.value })} />
+                  <input type="text" placeholder="Quy mô" value={tempDoanhNghiep.QuyMo} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, QuyMo: e.target.value })} />
+                  <button onClick={async () => {
+                    await doanhNghiepAPI.update(selectedKH.MaKH, { ...tempDoanhNghiep, MaKH: selectedKH.MaKH });
+                    await loadDetailData(selectedKH.MaKH);
+                    setEditDetailMode(null);
+                  }}>Lưu</button>
+                  <button onClick={() => setEditDetailMode(null)}>Hủy</button>
+                </div>
+              )}
+              {/* Nếu chưa có chi tiết, cho phép chọn loại và thêm mới */}
+              {!detailData.caNhan && !detailData.doanhNghiep && !addDetailMode && (
+                <div className="detail-section">
+                  <h4>Khách hàng này chưa có thông tin chi tiết</h4>
+                  <button onClick={() => setAddDetailMode('caNhan')}>Thêm cá nhân</button>
+                  <button onClick={() => setAddDetailMode('doanhNghiep')}>Thêm doanh nghiệp</button>
+                </div>
+              )}
+              {/* Form thêm cá nhân */}
+              {addDetailMode === 'caNhan' && (
+                <div className="detail-section">
+                  <h4>Thêm thông tin cá nhân</h4>
+                  <input type="text" placeholder="Mã cá nhân" value={tempCaNhan.MaCaNhan} onChange={e => setTempCaNhan({ ...tempCaNhan, MaCaNhan: e.target.value })} />
+                  <input type="text" placeholder="Tên cá nhân" value={tempCaNhan.Ten} onChange={e => setTempCaNhan({ ...tempCaNhan, Ten: e.target.value })} />
+                  <button onClick={async () => {
+                    await caNhanAPI.create({ ...tempCaNhan, MaKH: selectedKH.MaKH });
+                    await loadDetailData(selectedKH.MaKH);
+                    setAddDetailMode(null);
+                    setTempCaNhan({ MaCaNhan: '', Ten: '' });
+                  }}>Lưu</button>
+                  <button onClick={() => { setAddDetailMode(null); setTempCaNhan({ MaCaNhan: '', Ten: '' }); }}>Hủy</button>
+                </div>
+              )}
+              {/* Form thêm doanh nghiệp */}
+              {addDetailMode === 'doanhNghiep' && (
+                <div className="detail-section">
+                  <h4>Thêm thông tin doanh nghiệp</h4>
+                  <input type="text" placeholder="Mã doanh nghiệp" value={tempDoanhNghiep.MaDoanhNghiep} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, MaDoanhNghiep: e.target.value })} />
+                  <input type="text" placeholder="Loại hình kinh doanh" value={tempDoanhNghiep.LoaiHinhKinhDoanh} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, LoaiHinhKinhDoanh: e.target.value })} />
+                  <input type="text" placeholder="Tên doanh nghiệp" value={tempDoanhNghiep.Ten} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, Ten: e.target.value })} />
+                  <input type="text" placeholder="Quy mô" value={tempDoanhNghiep.QuyMo} onChange={e => setTempDoanhNghiep({ ...tempDoanhNghiep, QuyMo: e.target.value })} />
+                  <button onClick={async () => {
+                    await doanhNghiepAPI.create({ ...tempDoanhNghiep, MaKH: selectedKH.MaKH });
+                    await loadDetailData(selectedKH.MaKH);
+                    setAddDetailMode(null);
+                    setTempDoanhNghiep({ MaDoanhNghiep: '', LoaiHinhKinhDoanh: '', Ten: '', QuyMo: '' });
+                  }}>Lưu</button>
+                  <button onClick={() => { setAddDetailMode(null); setTempDoanhNghiep({ MaDoanhNghiep: '', LoaiHinhKinhDoanh: '', Ten: '', QuyMo: '' }); }}>Hủy</button>
+                </div>
+              )}
 
               {detailData.soDienThoai.length > 0 && (
                 <div className="detail-section">

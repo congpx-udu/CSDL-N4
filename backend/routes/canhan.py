@@ -46,3 +46,18 @@ def delete_canhan(makh: str):
         conn.commit()
     conn.close()
     return {"message": "Đã xoá khách hàng cá nhân"}
+
+@router.put("/{makh}")
+def update_canhan(makh: str, data: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE CaNhan SET MaCaNhan=%s, Ten=%s WHERE MaKH=%s",
+                (data["MaCaNhan"], data["Ten"], makh)
+            )
+            conn.commit()
+        conn.close()
+        return {"message": "Đã cập nhật khách hàng cá nhân"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

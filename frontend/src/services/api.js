@@ -166,7 +166,16 @@ export const caNhanAPI = {
   getAll: () => api.getAll('/canhan/'),
   getById: (id) => api.getById('/canhan/', id),
   create: (data) => api.create('/canhan/', data),
-  update: (id, data) => api.update('/canhan/', id, data),
+  update: (id, data) => {
+    return fetch(`${API_BASE}/canhan/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => {
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    });
+  },
   delete: (id) => api.delete('/canhan/', id),
 };
 
@@ -174,7 +183,16 @@ export const doanhNghiepAPI = {
   getAll: () => api.getAll('/doanhnghiep/'),
   getById: (id) => api.getById('/doanhnghiep/', id),
   create: (data) => api.create('/doanhnghiep/', data),
-  update: (id, data) => api.update('/doanhnghiep/', id, data),
+  update: (id, data) => {
+    return fetch(`${API_BASE}/doanhnghiep/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }).then(res => {
+      if (!res.ok) throw new Error('Network response was not ok');
+      return res.json();
+    });
+  },
   delete: (id) => api.delete('/doanhnghiep/', id),
 };
 

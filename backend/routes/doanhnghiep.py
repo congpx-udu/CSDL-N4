@@ -49,3 +49,18 @@ def delete_doanhnghiep(makh: str):
         conn.commit()
     conn.close()
     return {"message": "Đã xoá doanh nghiệp"}
+
+@router.put("/{makh}")
+def update_doanhnghiep(makh: str, data: dict):
+    try:
+        conn = get_connection()
+        with conn.cursor() as cursor:
+            cursor.execute(
+                "UPDATE DoanhNghiep SET MaDoanhNghiep=%s, LoaiHinhKinhDoanh=%s, Ten=%s, QuyMo=%s WHERE MaKH=%s",
+                (data["MaDoanhNghiep"], data["LoaiHinhKinhDoanh"], data["Ten"], data["QuyMo"], makh)
+            )
+            conn.commit()
+        conn.close()
+        return {"message": "Đã cập nhật doanh nghiệp"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
